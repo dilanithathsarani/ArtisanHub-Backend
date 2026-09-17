@@ -1,11 +1,29 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import axios from 'axios';
 import bodyParser from 'body-parser';
+import helmet from 'helmet';
+import cors from 'cors';
+import dotenv from 'dotenv';
 
+dotenv.config();
 const app = express();
 
-mongoose.connect("mongodb+srv://dilanithathsarani2003_db_user:LZmJFnbAzoaUucRs@cluster0.qwmf28h.mongodb.net/?appName=Cluster0").then(
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173"
+  })
+);
+
+app.use(
+  express.urlencoded({
+    extended: true
+  })
+);
+
+app.use(bodyParser.json());
+app.use(helmet());
+
+mongoose.connect(process.env.MONGO_URI).then(
   ()=>{
     console.log('Connected to Database');
   }
@@ -13,7 +31,6 @@ mongoose.connect("mongodb+srv://dilanithathsarani2003_db_user:LZmJFnbAzoaUucRs@c
   console.log('Error connecting to Database', err);
 });
 
-app.use(bodyParser.json());
 
 
 
