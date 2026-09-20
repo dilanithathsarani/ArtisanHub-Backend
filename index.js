@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import productRoutes from './routes/productRoutes.js';
+import cartRoutes from './routes/cartRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -41,6 +42,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
 
 
 app.listen(process.env.PORT || 5000, 
