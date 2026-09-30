@@ -13,6 +13,7 @@ import orderRoutes from './routes/orderRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import sellerProfileRoutes from './routes/sellerProfileRoutes.js';
 import wishlistRoutes from './routes/wishlistRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -51,6 +52,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/sellers", sellerProfileRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 
 app.listen(process.env.PORT || 5000, 
