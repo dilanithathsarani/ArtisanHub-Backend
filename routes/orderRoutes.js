@@ -6,7 +6,8 @@ import {
   getSellerOrders,
   getOrderById,
   updateOrderStatus,
-  getAllOrders
+  getAllOrders,
+  cancelMyOrder
 } from "../controllers/orderController.js";
 
 import {
@@ -56,6 +57,13 @@ router.get(
   "/:id",
   protect,
   getOrderById
+);
+
+router.put(
+  "/:id/cancel",
+  protect,
+  authorize("buyer"),
+  cancelMyOrder
 );
 
 export default router;
