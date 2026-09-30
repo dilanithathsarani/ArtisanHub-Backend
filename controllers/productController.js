@@ -618,3 +618,109 @@ export const reviewProduct = async (req, res) => {
     });
   }
 };
+
+export const getAdminProducts = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      status,
+      seller,
+      category,
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    const filter = {};
+
+    const allowedStatuses = [
+      "draft",
+      "pending",
+      "approved",
+      "rejected"
+    ];
+
+    if (status) {
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Product status"
+        });
+      }
+
+      filter.status = status;
+    }
+
+    if (seller) {
+      if (!mongoose.Types.ObjectId.isValid(seller)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Seller ID"
+        });
+      }
+
+      filter.seller = seller;
+    }
+
+    if (category) {
+      if (
+        !mongoose.Types.ObjectId.isValid(category)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Category ID"
+        });
+      }
+
+      filter.category = category;
+    }
+
+    const pageNumber = Math.max(
+      Number(page) || 1,
+      1
+    );
+
+    const limitNumber = Math.min(
+      Math.max(Number(limit) || 20, 1),
+      100
+    );
+
+    const skip =
+      (pageNumber - 1) * limitNumber;
+
+    const [products, totalProducts] =
+      await Promise.all([
+        Product.find(filter)
+          .populate("category", "name slug")
+          .populate(
+            "seller",
+            "name email sellerProfile.shopName"
+          )
+          .sort({
+            createdAt: -1
+          })
+          .skip(skip)
+          .limit(limitNumber),
+
+        Product.countDocuments(filter)
+      ]);
+
+    return res.status(200).json({
+      success: true,
+      count: products.length,
+      totalProducts,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(
+        totalProducts / limitNumber
+      ),
+      products
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        "Unable to retrieve Admin Products"
+    });
+  }
+};

@@ -7,7 +7,8 @@ import {
   getMyProducts,
   updateProduct,
   updateMyProductStatus,
-  reviewProduct
+  reviewProduct,
+  getAdminProducts
 } from "../controllers/productController.js";
 
 import {
@@ -56,5 +57,12 @@ router.put(
 );
 
 router.get("/:id", getProductById);
+
+router.get(
+  "/admin/all",
+  protect,
+  authorize("admin"),
+  getAdminProducts
+);
 
 export default router;
