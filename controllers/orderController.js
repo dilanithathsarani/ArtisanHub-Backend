@@ -550,3 +550,96 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
+export const cancelMyOrder = async (
+  req,
+  res
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    const { id } = req.params;
+    const { cancellationReason } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Order ID"
+      });
+    }
+
+    let cancelledOrder;
+
+    await session.withTransaction(async () => {
+      const order = await Order.findOne({
+        _id: id,
+        buyer: req.user._id
+      }).session(session);
+
+      if (!order) {
+        const error = new Error(
+          "Order not found or it does not belong to you"
+        );
+
+        error.statusCode = 404;
+        throw error;
+      }
+
+      if (
+        !["placed", "confirmed"].includes(
+          order.orderStatus
+        )
+      ) {
+        const error = new Error(
+          `A ${order.orderStatus} Order cannot be cancelled`
+        );
+
+        error.statusCode = 400;
+        throw error;
+      }
+
+      order.orderStatus = "cancelled";
+
+      order.cancellationReason =
+        cancellationReason?.trim() ||
+        "Cancelled by buyer";
+
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(
+          item.product,
+          {
+            $inc: {
+              stock: item.quantity
+            }
+          },
+          {
+            session
+          }
+        );
+      }
+
+      await order.save({
+        session
+      });
+
+      cancelledOrder = order;
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      order: cancelledOrder
+    });
+  } catch (error) {
+    return res
+      .status(error.statusCode || 500)
+      .json({
+        success: false,
+        message:
+          error.statusCode
+            ? error.message
+            : "Unable to cancel Order"
+      });
+  } finally {
+    await session.endSession();
+  }
+};
