@@ -14,6 +14,7 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import sellerProfileRoutes from './routes/sellerProfileRoutes.js';
 import wishlistRoutes from './routes/wishlistRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
 
 dotenv.config();
 const app = express();
@@ -54,6 +55,9 @@ app.use("/api/sellers", sellerProfileRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
+
+app.use(notFound);
+app.use(errorHandler);
 
 app.listen(process.env.PORT || 5000, 
 () => {
