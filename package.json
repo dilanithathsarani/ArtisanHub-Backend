@@ -22,7 +22,6 @@
     "express": "^5.2.1",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
-    "mogoose": "^0.0.1-security",
     "mongoose": "^9.9.4",
     "nodemon": "^3.1.14",
     "parser": "^0.1.4"

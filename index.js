@@ -59,12 +59,6 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173"
-  })
-);
-
 app.listen(process.env.PORT || 5000, 
 () => {
   console.log('Server is running on port ' + (process.env.PORT || 5000));
