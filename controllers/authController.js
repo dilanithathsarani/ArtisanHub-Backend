@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
+import crypto from "crypto";
 
 export const registerUser = async (req, res) => {
   try {
@@ -233,6 +234,66 @@ export const updateMyProfile = async (req, res) => {
       success: false,
       message: "Unable to update profile",
       error: error.message
+    });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+
+    if (!email || typeof email !== "string" || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid email address"
+      });
+    }
+
+    const user = await User.findOne({
+      email: normalizedEmail
+    });
+
+    const message =
+      "If an account with that email exists, password reset instructions will be sent.";
+
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to process the password reset request"
     });
   }
 };
