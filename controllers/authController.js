@@ -246,32 +246,32 @@ export const forgotPassword = async (req, res) => {
     if (!email || typeof email !== "string" || !email.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Email is required"
+        message: "Email is required",
       });
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(normalizedEmail)) {
       return res.status(400).json({
         success: false,
-        message: "Please enter a valid email address"
+        message: "Please enter a valid email address",
       });
     }
 
     const user = await User.findOne({
-      email: normalizedEmail
+      email: normalizedEmail,
     });
 
     const message =
       "If an account with that email exists, password reset instructions will be sent.";
 
     if (!user) {
+      console.log(`⚠️ Forgot password requested for non-existing email: ${normalizedEmail}`);
       return res.status(200).json({
         success: true,
-        message
+        message,
       });
     }
 
@@ -287,14 +287,67 @@ export const forgotPassword = async (req, res) => {
 
     await user.save();
 
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; padding: 24px; border: 1px solid #eadad0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #965022; font-size: 24px; margin-top: 0;">ArtisanHub Password Reset</h2>
+        <p style="color: #333333; font-size: 15px; line-height: 1.6;">Hello ${user.name || "there"},</p>
+        <p style="color: #555555; font-size: 14px; line-height: 1.6;">
+          We received a request to reset your password for your ArtisanHub account. Click the button below to set a new password:
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" style="background-color: #965022; color: #ffffff; padding: 13px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; display: inline-block;">
+            Reset My Password
+          </a>
+        </div>
+        <p style="color: #555555; font-size: 13px; line-height: 1.6;">
+          Or copy and paste this link into your browser:
+        </p>
+        <p style="background-color: #f7f7f7; padding: 12px; border-radius: 6px; word-break: break-all; font-size: 12px; color: #965022;">
+          <a href="${resetUrl}" style="color: #965022; text-decoration: underline;">${resetUrl}</a>
+        </p>
+        <p style="color: #777777; font-size: 13px; line-height: 1.5; margin-top: 20px;">
+          ⏱️ This link will expire in <strong>15 minutes</strong>.
+        </p>
+        <p style="color: #999999; font-size: 12px; line-height: 1.5;">
+          If you did not request this password reset, please ignore this email and your password will remain unchanged.
+        </p>
+        <hr style="border: none; border-top: 1px solid #eeeeee; margin: 24px 0;" />
+        <p style="color: #aaaaaa; font-size: 11px; text-align: center; margin-bottom: 0;">
+          ArtisanHub &bull; Handmade &bull; Local &bull; Unique
+        </p>
+      </div>
+    `;
+
+    try {
+      console.log(`📧 Sending password reset email to: ${user.email}...`);
+      await sendEmail({
+        to: user.email,
+        subject: "ArtisanHub - Password Reset Link",
+        text: `Reset your ArtisanHub password by visiting this link: ${resetUrl} (expires in 15 minutes)`,
+        html: htmlContent,
+      });
+      console.log(`✅ Password reset email successfully sent to ${user.email}`);
+    } catch (mailErr) {
+      console.error("❌ Failed to send reset email:", mailErr.message);
+    }
+
+    console.log("\n========================================");
+    console.log(`🔑 PASSWORD RESET LINK for ${user.email}:`);
+    console.log(resetUrl);
+    console.log("========================================\n");
+
     return res.status(200).json({
       success: true,
-      message
+      message,
     });
   } catch (error) {
+    console.error("Forgot password error:", error);
     return res.status(500).json({
       success: false,
-      message: "Unable to process the password reset request"
+      message: "Unable to process the password reset request",
     });
   }
 };

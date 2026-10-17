@@ -1,22 +1,18 @@
 ﻿import nodemailer from "nodemailer";
 
 const sendEmail = async ({ to, subject, html, text }) => {
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
+  const emailUser = (process.env.EMAIL_USER || "").trim().replace(/["']/g, "");
+  const emailPass = (process.env.EMAIL_PASS || "").replace(/\s+/g, "").replace(/["']/g, "");
 
   if (!emailUser || !emailPass) {
     console.warn(
       "\n⚠️ EMAIL_USER or EMAIL_PASS not configured in .env. Email cannot be dispatched over SMTP.\n"
     );
-    // Return false so caller knows SMTP was skipped
     return false;
   }
 
   const transporter = nodemailer.createTransport({
-    service: process.env.EMAIL_SERVICE || "gmail",
-    host: process.env.EMAIL_HOST || "smtp.gmail.com",
-    port: Number(process.env.EMAIL_PORT) || 587,
-    secure: Number(process.env.EMAIL_PORT) === 465,
+    service: "gmail",
     auth: {
       user: emailUser,
       pass: emailPass,
@@ -24,7 +20,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
   });
 
   const mailOptions = {
-    from: process.env.EMAIL_FROM || `"ArtisanHub" <${emailUser}>`,
+    from: `"ArtisanHub" <${emailUser}>`,
     to,
     subject,
     text,
@@ -32,7 +28,7 @@ const sendEmail = async ({ to, subject, html, text }) => {
   };
 
   const info = await transporter.sendMail(mailOptions);
-  console.log("Email sent successfully: %s", info.messageId);
+  console.log("Email sent successfully! Message ID: %s", info.messageId);
   return true;
 };
 
