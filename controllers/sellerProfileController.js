@@ -448,3 +448,33 @@ export const updateSellerProfile = async (
     });
   }
 };
+
+
+export const getPublicArtisans = async (req, res) => {
+  try {
+    const artisans = await User.find({
+      role: "seller",
+      isActive: true,
+      sellerApprovalStatus: "approved",
+      "sellerProfile.shopId": { $ne: "" },
+    })
+      .select("name avatar sellerProfile createdAt")
+      .populate({
+        path: "sellerProfile.craftCategories",
+        select: "name slug",
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      count: artisans.length,
+      artisans,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to retrieve artisan profiles",
+    });
+  }
+};

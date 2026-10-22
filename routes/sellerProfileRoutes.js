@@ -3,6 +3,7 @@ import express from "express";
 import {
   createSellerProfile,
   getMySellerProfile,
+  getPublicArtisans,
   getSellerProfileBySlug,
   updateSellerProfile
 } from "../controllers/sellerProfileController.js";
@@ -39,6 +40,11 @@ router.put(
 router.get(
   "/:slug",
   getSellerProfileBySlug
+);
+
+router.get(
+  "/",
+  getPublicArtisans
 );
 
 export default router;
